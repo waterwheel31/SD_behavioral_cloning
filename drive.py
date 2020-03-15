@@ -16,10 +16,20 @@ from keras.models import load_model
 import h5py
 from keras import __version__ as keras_version
 
+import tensorflow as tf
+import cv2
+
 sio = socketio.Server()
 app = Flask(__name__)
 model = None
 prev_image_array = None
+
+
+def preprocessing(img):
+    img = cv2.GaussianBlur(img, (3, 3), 0)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+    #img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    return img
 
 
 class SimplePIController:
@@ -61,11 +71,15 @@ def telemetry(sid, data):
         imgString = data["image"]
         image = Image.open(BytesIO(base64.b64decode(imgString)))
         image_array = np.asarray(image)
+        
+        #added
+        image_array = preprocessing(image_array)
+        
         steering_angle = float(model.predict(image_array[None, :, :, :], batch_size=1))
 
         throttle = controller.update(float(speed))
 
-        print(steering_angle, throttle)
+        print('steering angle:', steering_angle, 'throttle:', throttle)
         send_control(steering_angle, throttle)
 
         # save frame
