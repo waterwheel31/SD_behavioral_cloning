@@ -23,7 +23,7 @@ This tries to let a driving agent learn how to drive by seeing human's drive rec
 - Trained CNN model 
     - Used the images as the input and the steering movement as the output
     - Recorded 2 laps of a same environement (once in forward, once in backward cycle)
-    - Used following CNN network. This is based on NVIDA's network for self-driving car  (https://devblogs.nvidia.com/deep-learning-self-driving-cars/)
+    - Used following CNN network. This is based on (but modified) NVIDA's network for self-driving car  (https://devblogs.nvidia.com/deep-learning-self-driving-cars/)
 
     ![image](./images/network.png)
 
@@ -35,11 +35,12 @@ This tries to let a driving agent learn how to drive by seeing human's drive rec
         - add left-right flipped images (+ flipped sterring)
         - adjusted the right camera image's corresponding steering as -0.2 (toward left) and the left camera's images as +0.2 (toward right) 
         - changed to HLS color space and randomly adjusted the brightness (to avoide the impact of shadow) 
+        - Blurred using gaussian blurring by 5x5 matrix 
     
 ## Result 
 
 - The car can run one wrap in the same course 
-- See the video above
+- See the video above (mp4 file is <a href="./run1.mp4">here</a>)
 
 ## Limiation and improvement opportunities
 - This depends on images and does not understand where is the roads. Therefore, when the car faces unseen scenary (ex.out of the road), the car losts control. This can be solved by adding the concept of localization.  
