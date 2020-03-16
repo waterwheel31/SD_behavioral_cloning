@@ -35,6 +35,13 @@ def preprocessing(img):
     return img
 
 
+def preprocessing(img):
+    img = cv2.GaussianBlur(img, (3, 3), 0)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+    #img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    return img
+
+
 class SimplePIController:
     def __init__(self, Kp, Ki):
         self.Kp = Kp
