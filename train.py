@@ -16,7 +16,7 @@ import math
 
 lines = []
 
-with open('./data_new3/driving_log.csv') as csvfile:
+with open('./data1/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     header = next(reader)
     for line in reader: 
@@ -28,26 +28,17 @@ with open('./data_new3/driving_log.csv') as csvfile:
 # Preprocessing and Generator functions         
         
 def preprocessing(img):
-    img = cv2.GaussianBlur(img, (5, 5), 0)  
-    img = img[ 55: 140, :, :]   # cropping
+    #img = cv2.GaussianBlur(img, (5, 5), 0)  
+    img = img[ 55: 145, :, :]   # cropping
     img = cv2.resize(img, (200, 66), interpolation = cv2.INTER_AREA)   # resizing
     img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)  #chaning color space
     #img = np.expand_dims(img, axis=2)
     return img
  
-def augmentation(img):
+def random_brightness(img):
   
-    # color swap
-    #random_multiplier = int(np.random.uniform()) * 3 # 0 or 1 or 2
     img_aug = img
-    #for i in range(3):
-    #    img_aug[i] = img[(i + random_multiplier) % 3]
-    
-    # color flip 
-    #rm = int(np.random.uniform())   # 0 or 1
-    #img_aug = rm * img_aug + rm * (255 - img_aug)
-    
-    # random brightness 
+
     random_bright = 0.5 + np.random.uniform()
     img_aug[:,:,2] = img_aug[:,:,2]*random_bright
     img_aug[:,:,2][img_aug[:,:,2]>255]  = 255
@@ -69,36 +60,55 @@ def generator(samples, batch_size=32):
             
             for batch_sample in batch_samples:
                 
-                for i in range(3):
-                    
-                    #loading 
-                    source_path = batch_sample[i]
-                    #print('source_path:', source_path)
-                    image = cv2.imread(source_path)
-                    
-                    
-                    # preprocess and augumentation                  
-                    image = augmentation(image)
-                    image = preprocessing(image)
-                    
-                    image_flipped = np.fliplr(image)
-                    
-                     
-                    images.append(image)
-                    images.append(image_flipped)
-                                   
-                    # intentional adjustment for right and left cameras
-                    bias_adj = 0.20
-                    ster_adj = 0.0       
-                    if i == 1: ster_adj = bias_adj * 1
-                    elif i == 2: ster_adj = bias_adj * -1 
-
-                    measurement = float(batch_sample[3]) + ster_adj
-                    measurement_flipped = -measurement     
-                    measurements.append(measurement)                    
-                    measurements.append(measurement_flipped)
-                    
-                    #print(source_path, 'ster_adj:', ster_adj, 'measurement:', measurement)            
+                #loading 
+                source_path = batch_sample[0]
+                image = cv2.imread(source_path)
+                image = preprocessing(image)
+                measurement = float(batch_sample[3])
+                
+                # add original data
+                images.append(image)
+                measurements.append(measurement)
+                
+                # augumentation - flip 
+                image_flipped = np.fliplr(image)
+                images.append(image_flipped)
+                measurements.append(measurement * -1)
+                
+                # augumentation - random brightnes
+                image_random_brightness = random_brightness(image)
+                images.append(image_random_brightness)
+                measurements.append(measurement)
+                
+                # blur
+                image_blur = cv2.GaussianBlur(image, (5, 5), 0)  
+                images.append(image_blur)
+                measurements.append(measurement)
+                
+                # equalize_hist
+                image_equ = np.copy(image)
+                for channel in range(image_equ.shape[2]):
+                    image_equ[:, :, channel] = cv2.equalizeHist(image_equ[:, :, channel]) * 255
+                images.append(image_equ)
+                measurements.append(measurement)
+                
+                # left camera and right camera 
+                bias_adj = 0.30
+                
+                source_path_left = batch_sample[1]  # left
+                image_left = cv2.imread(source_path_left)
+                image_left = preprocessing(image_left)
+                measurement = float(batch_sample[3]) + bias_adj  
+                images.append(image_left)
+                measurements.append(min(measurement, 1))  
+                
+                source_path_right = batch_sample[2]  
+                image_right = cv2.imread(source_path_right)
+                image_right = preprocessing(image_right)
+                measurement = float(batch_sample[3]) - bias_adj
+                images.append(image_right)
+                measurements.append(max(measurement, -1))  
+                   
                     
             X_train = np.array(images)
             y_train = np.array(measurements)
@@ -120,7 +130,7 @@ model.add(Conv2D(64, (3, 3),  padding='same', activation='relu'))
 model.add(Conv2D(64, (3, 3),  padding='same', activation='relu'))
 model.add(Flatten())
 model.add(Dropout(0.2))
-model.add(Dense(1000, activation='relu'))
+#model.add(Dense(1000, activation='relu'))
 model.add(Dense(100, activation='relu'))
 model.add(Dense(50, activation='relu'))
 model.add(Dropout(0.2))
@@ -137,13 +147,13 @@ batch_size=32
 train_generator = generator(train_samples, batch_size=batch_size)
 validation_generator = generator(validation_samples, batch_size=batch_size)
 
-adm = optimizers.Adam(lr=0.0005)
+adm = optimizers.Adam(lr=0.001)
 model.compile(loss='mean_squared_error', optimizer=adm)
 model.fit_generator(train_generator, \
                     steps_per_epoch=math.ceil(len(train_samples)/batch_size), \
                     validation_data=validation_generator, \
                     validation_steps=math.ceil(len(validation_samples)/batch_size),\
-                    epochs=2, \
+                    epochs=7, \
                     verbose=1)
 
 
