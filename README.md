@@ -1,8 +1,8 @@
 # Behavioral Cloning
 
 
-![image](./images/run1_short.gif)
-
+[![Youtube](http://img.youtube.com/vi/35PKVw-BydI/0.jpg)](https://www.youtube.com/watch?v=35PKVw-BydI "Pathplanning")
+  (click to see Youtube Video)
 
 ## Objective 
 
@@ -13,34 +13,40 @@ This tries to let a driving agent learn how to drive by seeing human's drive rec
 
 - Record manually drived virtual vehicle
     - Used a driving course environment on Unity
-    ![image](./images/human_drive.png)
     - drived a virtual car, and recorded followings:
         -  images of from the vehicle from 3 points 
             -  front(center)
             -  front(biased-to-left)
             -  front(biased-toright))
         -  sterring input by human
+
+    <p align="center">
+    <img src="./images/human_drive.png" width=300>
+
 - Trained CNN model 
     - Used the images as the input and the steering movement as the output
-    - Recorded 2 laps of a same environement (once in forward, once in backward cycle)
+    - Recorded 4 laps of a same environement. Recorded 50+ times at difficult to learn places (in front of the dirt area and steep curb in the end)
     - Used following CNN network. This is based on (but modified) NVIDA's network for self-driving car  (https://devblogs.nvidia.com/deep-learning-self-driving-cars/)
 
-    ![image](./images/network.png)
+    <p align="center">
+    <img src="./images/network.png" width = 300>
+    </p>
 
 
-    - Data is preprrocessed/augumated as below:
-        - Cropped the top and bottom of the images and focused on the area where the road is shown
+    - Data is preprrocessed as below:
+        - Cropped the top and bottom of the images and focused on the area where the road is shown 
         - Resized to (200 x 66) 
         - normalized the data between -0.5 - +0.5 
+    - Data is Augumented and increased when training
         - add left-right flipped images (+ flipped sterring)
-        - adjusted the right camera image's corresponding steering as -0.2 (toward left) and the left camera's images as +0.2 (toward right) 
-        - changed to HLS color space and randomly adjusted the brightness (to avoide the impact of shadow) 
-        - Blurred using gaussian blurring by 5x5 matrix 
+        - image from left camera and right camera (as mentioned above). Adjusted the right camera image's corresponding steering as -0.2 (toward left) and the left camera's images as +0.2 (toward right) 
+        - historam equalization
+        - randomly adjusted the brightness (to avoide the impact of shadow) 
     
 ## Result 
 
 - The car can run one wrap in the same course 
-- See the video above (mp4 file is <a href="./run1.mp4">here</a>)
+- See the video above 
 
 ## Limiation and improvement opportunities
 - This depends on images and does not understand where is the roads. Therefore, when the car faces unseen scenary (ex.out of the road), the car losts control. This can be solved by adding the concept of localization.  

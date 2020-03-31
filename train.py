@@ -29,19 +29,21 @@ with open('./data1/driving_log.csv') as csvfile:
         
 def preprocessing(img):
     #img = cv2.GaussianBlur(img, (5, 5), 0)  
-    img = img[ 55: 145, :, :]   # cropping
+    img = img[ 70: 135, :, :]   # cropping
     img = cv2.resize(img, (200, 66), interpolation = cv2.INTER_AREA)   # resizing
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)  #chaning color space
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  #chaning color space
     #img = np.expand_dims(img, axis=2)
     return img
  
 def random_brightness(img):
-  
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)  #chaning color space
     img_aug = img
-
+    
     random_bright = 0.5 + np.random.uniform()
     img_aug[:,:,2] = img_aug[:,:,2]*random_bright
     img_aug[:,:,2][img_aug[:,:,2]>255]  = 255
+    
+    img_aug = cv2.cvtColor(img_aug, cv2.COLOR_HLS2RGB)
     
     return img_aug
     
@@ -80,10 +82,12 @@ def generator(samples, batch_size=32):
                 images.append(image_random_brightness)
                 measurements.append(measurement)
                 
+                '''
                 # blur
                 image_blur = cv2.GaussianBlur(image, (5, 5), 0)  
                 images.append(image_blur)
                 measurements.append(measurement)
+                '''
                 
                 # equalize_hist
                 image_equ = np.copy(image)
@@ -93,7 +97,7 @@ def generator(samples, batch_size=32):
                 measurements.append(measurement)
                 
                 # left camera and right camera 
-                bias_adj = 0.30
+                bias_adj = 0.20
                 
                 source_path_left = batch_sample[1]  # left
                 image_left = cv2.imread(source_path_left)
@@ -120,21 +124,21 @@ def generator(samples, batch_size=32):
 
 model = Sequential()
 model.add(Lambda(lambda x: (x/255.0) - 0.5, input_shape=(66, 200, 3)))
-model.add(Conv2D(24, (5, 5), padding='same', activation='relu'))
+model.add(Conv2D(24, (5, 5), padding='same', activation='elu'))
 model.add(MaxPooling2D())
-model.add(Conv2D(36, (5, 5), padding='same', activation='relu'))
+model.add(Conv2D(36, (5, 5), padding='same', activation='elu'))
 model.add(MaxPooling2D())
-model.add(Conv2D(48, (5, 5), padding='same', activation='relu'))
+model.add(Conv2D(48, (5, 5), padding='same', activation='elu'))
 model.add(MaxPooling2D())
-model.add(Conv2D(64, (3, 3),  padding='same', activation='relu'))
-model.add(Conv2D(64, (3, 3),  padding='same', activation='relu'))
+model.add(Conv2D(64, (3, 3),  padding='same', activation='elu'))
+model.add(Conv2D(64, (3, 3),  padding='same', activation='elu'))
 model.add(Flatten())
-model.add(Dropout(0.2))
+model.add(Dropout(0.3))
 #model.add(Dense(1000, activation='relu'))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(50, activation='relu'))
-model.add(Dropout(0.2))
-model.add(Dense(10, activation='relu'))
+model.add(Dense(100, activation='elu'))
+model.add(Dense(50, activation='elu'))
+model.add(Dropout(0.3))
+model.add(Dense(10, activation='elu'))
 model.add(Dense(1))
 model.summary()
 
@@ -147,13 +151,13 @@ batch_size=32
 train_generator = generator(train_samples, batch_size=batch_size)
 validation_generator = generator(validation_samples, batch_size=batch_size)
 
-adm = optimizers.Adam(lr=0.001)
+adm = optimizers.Adam(lr=0.0005)
 model.compile(loss='mean_squared_error', optimizer=adm)
 model.fit_generator(train_generator, \
                     steps_per_epoch=math.ceil(len(train_samples)/batch_size), \
                     validation_data=validation_generator, \
                     validation_steps=math.ceil(len(validation_samples)/batch_size),\
-                    epochs=7, \
+                    epochs=6, \
                     verbose=1)
 
 

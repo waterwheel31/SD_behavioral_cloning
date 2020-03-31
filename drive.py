@@ -27,9 +27,9 @@ prev_image_array = None
         
 def preprocessing(img):
     #img = cv2.GaussianBlur(img, (5, 5), 0)  
-    img = img[ 55: 145, :, :]   # cropping
+    img = img[ 70: 135, :, :]   # cropping
     img = cv2.resize(img, (200, 66), interpolation = cv2.INTER_AREA)   # resizing
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)  #chaning color space
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  #chaning color space
    
     return img
 
