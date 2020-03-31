@@ -1,8 +1,13 @@
 # Behavioral Cloning
 
+<p align="center">
 
 [![Youtube](http://img.youtube.com/vi/35PKVw-BydI/0.jpg)](https://www.youtube.com/watch?v=35PKVw-BydI "Pathplanning")
+
   (click to see Youtube Video)
+</p>
+
+
 
 ## Objective 
 
@@ -29,7 +34,7 @@ This tries to let a driving agent learn how to drive by seeing human's drive rec
     - Used following CNN network. This is based on (but modified) NVIDA's network for self-driving car  (https://devblogs.nvidia.com/deep-learning-self-driving-cars/)
 
     <p align="center">
-    <img src="./images/network.png" width = 300>
+    <img src="./images/network.png" width = 400>
     </p>
 
 
